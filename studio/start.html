@@ -1,0 +1,496 @@
+<html>
+	<head>
+		<title>Music Producer</title>
+		<style>
+			body {
+			 margin: 0px;
+			 overflow: hidden;
+			}
+			body .head {
+			 background-color: rgba(150, 150, 150, 1);
+			 width: 100%;
+			 height: 12.5%;
+			}
+			.sidebar {
+			 background-color: rgba(125, 125, 125, 1);
+			 width: 25%;
+			 height: 87.5%;
+			}
+			.display {
+			 background-color: rgba(50, 50, 50, 1);
+			 width: 75%;
+			 height: 87.5%;
+			}
+			.mainDisplay {
+			 display: flex;
+			 overflow-y: auto;
+			}
+			#addNewInstrument {
+				width: 50px;
+				height: 50px;
+				font-size: 40px;
+				color: white;
+				text-align: center;
+				margin: 0 auto;
+				cursor: pointer;
+				background-color: rgba(0, 0, 0, 0.25);
+			}
+			.addInstumentSpacer {
+				width: 100%;
+				height: 50px;
+			}
+			
+			.instrument {
+			 width: 100%;
+			 height: auto;
+			 background-color: rgba(255, 255, 255, 0.25);
+			 margin-bottom: 5%;
+			}
+			
+			.instrument .header {
+				text-align: center;
+				font-size: 30px;
+			}
+			
+			.deafen {
+			 width: 50px;
+			 height: 50px;
+			 color: white;
+			 cursor: pointer;
+			}
+			
+			.instrument input[type=range] {
+			 width: 45%;
+			 margin-left: 5%;
+			}
+			
+			.volumeDisplay {
+			 display: inline;
+			 margin-left: 5%;
+			 font-size: 25px;
+			 color: rgba(25, 255, 25, 1);
+			}
+			
+			#editDisplay {
+			 display: none;
+			 width: auto;
+			 height: 100%;
+			 background-color: rgba(50, 50, 50, 1);
+			 overflow-x: auto;
+			}
+			
+			.slot .name {
+				width: 150px;
+				height: 50px;
+				background-color: black;
+				font-size: 30px;
+				color: white;
+				text-align: center;
+				cursor: pointer;
+				position: fixed;
+			}
+			
+			.nameSpacer {
+				width: 150px;
+				height: 50px;
+			}
+			
+			.slot .name:hover {
+				background-color: rgba(255, 255, 255, 0.75);
+				color: black;
+			}
+			
+			.slot .enabledDisabled {
+			 display: inline-flex;
+			 margin-right: 50px;
+			}
+			
+			.eDBoxes {
+			 border: 2.5px solid white;
+			 width: 45px;
+			 height: 45px;
+			 margin-left: 5px;
+			 cursor: pointer;
+			}
+			
+			.eDBoxes:nth-child(even) {
+			 border: 2.5px solid rgba(205, 205, 205, 1);
+			}
+			
+			.eDBoxes:hover {
+			 border: 2.5px solid rgba(50, 50, 255, 1);
+			}
+			
+			.slot {
+			 display: inline-flex;
+			 margin-top: 5px;
+			 margin-left: 5px;
+			}
+			
+			.slot:hover {
+			 background-color: rgba(255, 255, 255, 0.5);
+			}
+			
+			#changeSound {
+			 background-color: black;
+			 border: 1px white solid;
+			 position: absolute;
+			 width: 500px;
+			 height: 500px;
+			 display: none;
+			 margin: 0 auto;
+			 top: 12.5%;
+			 left: 25%;
+			}
+			
+			#closeChangeSound {
+			 font-size: 30px;
+			 height: 30px;
+			 width: auto;
+			 color: red;
+			 position: absolute;
+			 top: 0px;
+			 right: 5px;
+			 padding: 5px;
+			 cursor: pointer;
+			 transition: 0.5s color;
+			}
+			
+			#closeChangeSound:hover {
+			 color: rgba(0, 255, 0, 1);
+			}
+			
+			#soundName {
+			 text-align: center;
+			 color: white;
+			 font-size: 35px;
+			}
+			
+			#soundType, #sound {
+			 margin-left: 10%;
+			 margin-top: 25px;
+			 width: 80%;
+			 height: auto;
+			}
+			
+			option:disabled {
+			 color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="head">
+			<div id="playTime">00:00.000</div>
+		</div>
+		<div class="mainDisplay">
+			<div class="sidebar">
+				<div id="addNewInstrument">+</div>
+			</div>
+			<div class="display">
+				<div id="editDisplay">
+
+				</div>
+				<div class="addInstumentSpacer"></div>
+				<div id="someInstrument"></div>
+			</div>
+		</div>
+		<div id="changeSound">
+			<div id="closeChangeSound">X</div>
+			<div id="soundName">No Data Pulled</div>
+			<select id="soundType" onchange="if (this.value == 'drums') {document.getElementById('sound').innerHTML = app.drumSounds} else {document.getElementById('sound').innerHTML = app.synthSounds}">
+				<option value="drums" selected>Drums</option>
+				<option value="synth" disabled>Synth</option>
+			</select>
+			<select id="sound" onchange="app.playSound(this.value)">
+				<option value="none" selected>Empty</option>
+				<option value="drums/sfx/bark01.wav">Bark 1</option>
+				<option value="drums/drums/drum01.wav">Kicks</option>
+			</select>
+			<p id="acceptSelection">Select</p>
+		</div>
+	</body>
+	<script>
+		let app = {
+			play: function() {
+				if (app.playing != true) {
+					app.interval = setInterval( function() {
+						if (app.current == 32) {
+							app.current = 0;
+						}
+						let sounds = document.getElementsByClassName('instrument');
+						for (let i = 0; i < sounds.length; i++) {
+							for (let j = 0; j < Object.keys(sounds[i].data).length; j++) {
+								let oname = Object.keys(sounds[i].data)[j];
+								let ob = sounds[i].data;
+								ob = ob[oname];
+								let source = ob.source;
+								if (ob[app.current] == true) {
+								console.log(oname)
+									app.playSound(source);
+									console.log(source)
+									console.log('yup')
+									console.log(ob)
+								}
+							}
+						}
+						app.current++;
+					}, 1000/120 * 100);
+					app.playing = true;
+				}
+			},
+			stop: function() {
+			
+			},
+			interval: '',
+			playing: false,
+			drumSounds: '<option value="none" selected>Empty</option>' +
+						'<option value="drums/sfx/bark01.wav">Bark 1</option>' + 
+						'<option value="drums/drums/drum01.wav">808 Drum</option>' ,
+			playSound: function(src) {
+				if (src != 'none') {
+					let audioContainer = {}
+					let audioNum = Math.random() * 100000;
+					audioContainer[audioNum] = new Audio();
+					audioContainer[audioNum].src = src;
+					audioContainer[audioNum].play();
+					audioContainer[audioNum] = '';
+				}
+			},
+			current: 0,
+			settings: {
+				songLength: 32,
+				bpm: 140,
+			},
+			newInstrument: {
+				drums: function() {
+					let div = document.createElement('div');
+					div.className = 'instrument';
+					document.getElementsByClassName('sidebar')[0].appendChild(div);
+					
+					div.data = {
+						slot1: {},
+						slot2: {},
+						slot3: {},
+						slot4: {},
+						slot5: {},
+					}
+					
+					let emptyData = {
+					
+					}
+					let emptyData2 = {
+					
+					}
+					let emptyData3 = {
+					
+					}
+					let emptyData4 = {
+					
+					}
+					let emptyData5 = {
+					
+					}
+					
+					for (let i = 0; i < 32; i++) {
+						emptyData[i] = false;
+					}
+					for (let i = 0; i < 32; i++) {
+						emptyData2[i] = false;
+					}
+					for (let i = 0; i < 32; i++) {
+						emptyData3[i] = false;
+					}
+					for (let i = 0; i < 32; i++) {
+						emptyData4[i] = false;
+					}
+					for (let i = 0; i < 32; i++) {
+						emptyData5[i] = false;
+					}
+					
+					div.data.slot1 = emptyData;
+					div.data.slot2 = emptyData2;
+					div.data.slot3 = emptyData3;
+					div.data.slot4 = emptyData4;
+					div.data.slot5 = emptyData5;
+					
+					div.data.slot1.name = 'Empty';
+					div.data.slot2.name = 'Empty';
+					div.data.slot3.name = 'Empty';
+					div.data.slot4.name = 'Empty';
+					div.data.slot5.name = 'Empty';
+					
+					div.data.slot1.source = 'none';
+					div.data.slot2.source = 'none';
+					div.data.slot3.source = 'none';
+					div.data.slot4.source = 'none';
+					div.data.slot5.source = 'none';
+					
+					let header = document.createElement('div');
+					header.innerHTML = 'Drums';
+					header.className = 'header';
+					div.appendChild(header);
+					
+					let input = document.createElement('input');
+					input.type = 'range';
+					input.min = 0;
+					input.max = 100;
+					input.value = 80;
+					input.step = 1;
+					div.appendChild(input);
+					
+					let volume = document.createElement('p');
+					volume.innerHTML = `Volume: ${input.value}`;
+					volume.className = 'volumeDisplay';
+					div.appendChild(volume);
+					
+					/*let change = document.createElement('div');
+					change.innerHTML = 'Change Drums';
+					div.appendChild(change);
+					*/
+					let edit = document.createElement('div');
+					edit.innerHTML = 'Edit';
+					edit.onclick = function() {
+						app.openEdit(this.parentElement.data);
+					}
+					div.appendChild(edit);
+					
+					let deafen = document.createElement('div');
+					deafen.innerHTML = 'deafen';
+					deafen.className = 'deafen';
+					div.appendChild(deafen);
+				},
+				synth: function() {
+					let div = document.createElement('div');
+					div.className = 'instrument';
+					document.getElementsByClassName('sidebar')[0].appendChild(div);
+					
+					let header = document.createElement('div');
+					header.innerHTML = 'Synth';
+					header.className = 'header';
+					div.appendChild(header);
+					
+					let input = document.createElement('input');
+					input.type = 'range';
+					input.min = 0;
+					input.max = 100;
+					input.value = 80;
+					input.step = 1;
+					div.appendChild(input);
+					
+					let volume = document.createElement('p');
+					volume.innerHTML = `Volume: ${input.value}`;
+					volume.className = 'volumeDisplay';
+					div.appendChild(volume);
+					
+					let change = document.createElement('div');
+					change.innerHTML = 'Change Synth';
+					div.appendChild(change);
+					
+					let edit = document.createElement('div');
+					edit.innerHTML = 'Edit';
+					div.appendChild(edit);
+					
+					let deafen = document.createElement('div');
+					deafen.innerHTML = 'deafen';
+					deafen.className = 'deafen';
+					div.appendChild(deafen);
+				
+				},
+			},
+			openEdit: function(data) {
+				let page = document.getElementById('editDisplay');
+				page.innerHTML = '';
+				page.style.display = 'block';
+				document.getElementsByClassName('display')[0].style.overflow = 'hidden';
+				for (let i = 0; i < Object.keys(data).length; i++) {
+				 let name = Object.keys(data)[i];
+				 let tName = name;
+				 let dataSet = data[name];
+				 name = data[name].name;
+				 
+				 let slot = document.createElement('div');
+				 slot.className = 'slot';
+				 document.getElementById('editDisplay').appendChild(slot);
+				 
+				 let slotName = document.createElement('div');
+				 slotName.innerHTML = name;
+				 slotName.className = 'name';
+				 slotName.onclick = function(e) {
+					let x = e.clientX;
+					let y = e.clientY;
+					let config = document.getElementById('changeSound');
+					config.style.display = 'block';
+					/*
+					config.style.left = x + 'px';
+					config.style.top = y + 'px';
+					*/
+					document.getElementById('closeChangeSound').onclick = function() {
+					 config.style.display = 'none';
+					}
+					document.getElementById('acceptSelection').onclick = function() {
+					 dataSet.source = document.getElementById('sound').value;
+					 slotName.innerHTML = dataSet.source;
+					 console.log(data);
+					}
+				 }
+				 slot.appendChild(slotName);
+				 
+				 let spacer = document.createElement('div');
+				 spacer.className = 'nameSpacer';
+				 slot.appendChild(spacer);
+				 
+				 let enabledDisabled = document.createElement('div');
+				 enabledDisabled.className = 'enabledDisabled';
+				 slot.appendChild(enabledDisabled);
+				 
+				 for (let j = 0; j < 32; j++) {
+					let edBox = document.createElement('div');
+					edBox.className = 'eDBoxes';
+					enabledDisabled.appendChild(edBox);
+					edBox.attributes.enabled = dataSet[j];
+					edBox.attributes.num = j;
+					edBox.attributes.slot = tName;
+					if (edBox.attributes.enabled == true) {
+						edBox.style.backgroundColor = 'green';
+					} else {
+						edBox.style.backgroundColor = 'red';
+					}
+					edBox.onclick = function() {
+						if (this.attributes.enabled == false) {
+							this.attributes.enabled = true;
+							this.style.backgroundColor = 'green';
+							data[this.attributes.slot][this.attributes.num] = true;
+						} else {
+							this.attributes.enabled  = false;
+							this.style.backgroundColor = 'red';
+							data[this.attributes.slot][this.attributes.num] = false;
+						}
+						
+						console.log(data[this.attributes.slot])
+						console.log(this.attributes.slot)
+						console.log(data)
+						
+						// Update Data
+						
+						/*let slots = document.getElementsByClassName('slot');
+						for (let i = 0; i < slots.length; i++) {
+							let slotData = slots[i].getElementsByClassName('eDBoxes');
+							let dataName = Object.keys(data)[i];
+							let dataName2 = data[dataName].name;
+							let dataSource = data[dataName].source;
+							for (let j = 0; j < 32; j++) {
+								let ddata = data[dataName]
+								ddata[j] = slotData[j].attributes.enabled;
+							}
+							console.log(data)
+						}*/
+					}
+				  }
+				}
+			}
+		}
+		editDisplay.onwheel = function() {
+		}
+		app.newInstrument.drums();
+	</script>
+</html>
